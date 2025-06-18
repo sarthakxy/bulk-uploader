@@ -1,12 +1,12 @@
 const express = require('express');
-const redis = require('../redis'); // Redis client
+const redis = require('../redis'); 
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
 const router = express.Router();
 
-// Create uploads folder if it doesn't exist
+
 const uploadPath = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath);
 
@@ -32,7 +32,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   };
 
   try {
-    // Push job to Redis queue
+    
     await redis.lpush('fileQueue', JSON.stringify(jobData));
 
     res.status(200).json({

@@ -1,4 +1,4 @@
-// worker.js
+
 const redis = require('./redis');
 const path = require('path');
 const xlsx = require('xlsx');
@@ -8,10 +8,7 @@ const mongoose = require('mongoose');
 const abortSub = createClient({ url: 'redis://127.0.0.1:6379' });
 const abortedJobs = new Set();
 
-
-
-require('dotenv').config(); // Load .env to access MONGO_URI
-
+require('dotenv').config(); 
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -23,7 +20,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 
 const pub = createClient({
-  url: 'redis://127.0.0.1:6379' // IPv4 enforced
+  url: 'redis://127.0.0.1:6379' 
 });
 
 pub.connect()
@@ -51,20 +48,20 @@ async function processFile(job) {
       aborted: true
     }));
 
-    return; // Stop further processing
+    return; 
   }
     const batch = data.slice(i, i + batchSize);
 
     for (const row of batch) {
       try {
-        // ✅ Example validation
+        
         if (!row.email || !row.name) throw new Error('Missing required fields');
 
-        // ✅ Duplicate check
+        
         const exists = await Record.findOne({ 'data.email': row.email });
         if (exists) throw new Error('Duplicate entry');
 
-        // ✅ Save success record
+        
         await Record.create({
           filename: job.filename,
           data: row,
@@ -73,7 +70,7 @@ async function processFile(job) {
 
         successCount++;
       } catch (err) {
-        // ✅ Save failed record
+        
         await Record.create({
           filename: job.filename,
           data: row,
@@ -85,17 +82,17 @@ async function processFile(job) {
       }
     }
 
-    // ✅ Publish batch progress
+    
     await pub.publish('fileProgress', JSON.stringify({
       filename: job.filename,
       batch: i / batchSize + 1,
       total: Math.ceil(data.length / batchSize)
     }));
 
-    await new Promise(res => setTimeout(res, 500)); // Simulate delay
+    await new Promise(res => setTimeout(res, 500)); 
   }
 
-  // ✅ Publish final summary
+  
   await pub.publish('fileProgress', JSON.stringify({
     filename: job.filename,
     completed: true,
@@ -114,7 +111,7 @@ async function startWorker() {
 
   while (true) {
     try {
-      const jobData = await redis.brpop('fileQueue', 0); // Blocking pop
+      const jobData = await redis.brpop('fileQueue', 0); 
       const job = JSON.parse(jobData[1]);
       await processFile(job);
     } catch (err) {

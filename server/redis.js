@@ -1,7 +1,5 @@
-// server/redis.js
-const Redis = require('ioredis');
 
-// Explicitly connect to IPv4 localhost to avoid ::1 (IPv6) issues
+const Redis = require('ioredis');
 const redis = new Redis({
   host: '127.0.0.1',
   port: 6379

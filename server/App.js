@@ -1,4 +1,3 @@
-// server/app.js
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -17,20 +16,20 @@ const io = socketIO(server, {
   }
 });
 
-// Middleware
+
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 app.set('io', io);
 app.use('/api', uploadRoutes);
 
-// Setup Redis client for publishing abort messages
+
 const redisClient = createClient({ url: 'redis://127.0.0.1:6379' });
 redisClient.connect().then(() => {
   console.log('📡 Redis publisher connected');
 }).catch(console.error);
 
-// Handle abort requests from frontend
+
 app.post('/api/abort', async (req, res) => {
   const { filename } = req.body;
 
@@ -48,18 +47,18 @@ app.post('/api/abort', async (req, res) => {
   }
 });
 
-// Setup Redis subscriber for progress updates
+
 const subscriber = createClient({ url: 'redis://127.0.0.1:6379' });
 
 subscriber.connect().then(() => {
   console.log('📡 Redis subscriber connected');
   subscriber.subscribe('fileProgress', (message) => {
     const data = JSON.parse(message);
-    io.emit('file-progress', data); // Broadcast progress to clients
+    io.emit('file-progress', data); 
   });
 }).catch(console.error);
 
-// Start server
+
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

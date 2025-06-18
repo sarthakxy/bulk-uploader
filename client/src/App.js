@@ -13,7 +13,7 @@ function App() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showWarningPopup, setShowWarningPopup] = useState(false); // 🟡 NEW: warning popup toggle
+  const [showWarningPopup, setShowWarningPopup] = useState(false); 
 
   useEffect(() => {
     socket.on('file-progress', (data) => {
@@ -38,9 +38,8 @@ function App() {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
 
-    // Check for same file name
     if (selectedFile.name === uploadedFileName) {
-      setShowWarningPopup(true); // ⚠️ trigger warning
+      setShowWarningPopup(true); 
       return;
     }
 
@@ -92,7 +91,7 @@ function App() {
         <input
   id="fileUpload"
   type="file"
-  onClick={(e) => (e.target.value = null)} // ✅ Force clear file input
+  onClick={(e) => (e.target.value = null)} 
   onChange={handleFileChange}
   accept=".csv,.xlsx"
 />
@@ -123,7 +122,7 @@ function App() {
         {message && <p className="message">{message}</p>}
       </div>
 
-      {/* 🎉 Success Popup */}
+      
       {showSuccessPopup && (
         <div className="popup-overlay">
           <div className="popup">
@@ -136,7 +135,7 @@ function App() {
         </div>
       )}
 
-      {/* ⚠️ Warning Popup */}
+      
       {showWarningPopup && (
         <div className="popup-overlay">
           <div className="popup warning">
