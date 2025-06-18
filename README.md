@@ -51,20 +51,8 @@ bulk-uploader/
 ├── .env # Environment variables
 └── README.md
 
-yaml
-Copy
-Edit
 
----
-
-## 🌐 Live Demo
-
-- **Frontend (Vercel)**: [https://your-frontend.vercel.app](https://your-frontend.vercel.app)
-- **Backend (Render)**: [https://your-backend.onrender.com](https://your-backend.onrender.com)
-
-> Replace with your actual deployment URLs.
-
----
+## 🌐 Live Demo --   
 
 ## ⚙️ Setup Instructions
 
@@ -81,10 +69,10 @@ Create a `.env` file inside the `server/` folder with:
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
+
+
 Running the Project
-bash
-Copy
-Edit
+
 # 1. Clone the repo
 git clone https://github.com/your-username/bulk-uploader.git
 cd bulk-uploader
