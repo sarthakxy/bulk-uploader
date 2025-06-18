@@ -24,16 +24,38 @@ app.use('/uploads', express.static('uploads'));
 app.set('io', io);
 app.use('/api', uploadRoutes);
 
-// Setup Redis subscriber to listen for progress events
-const subscriber = createClient({
-  url: 'redis://127.0.0.1:6379' // IPv4 localhost
+// Setup Redis client for publishing abort messages
+const redisClient = createClient({ url: 'redis://127.0.0.1:6379' });
+redisClient.connect().then(() => {
+  console.log('📡 Redis publisher connected');
+}).catch(console.error);
+
+// Handle abort requests from frontend
+app.post('/api/abort', async (req, res) => {
+  const { filename } = req.body;
+
+  if (!filename) {
+    return res.status(400).json({ error: 'Filename is required' });
+  }
+
+  try {
+    await redisClient.publish('abortJob', filename);
+    console.log(`❌ Abort triggered for ${filename}`);
+    return res.status(200).json({ message: `Abort signal sent for ${filename}` });
+  } catch (err) {
+    console.error('Abort publish error:', err);
+    return res.status(500).json({ error: 'Failed to publish abort signal' });
+  }
 });
+
+// Setup Redis subscriber for progress updates
+const subscriber = createClient({ url: 'redis://127.0.0.1:6379' });
 
 subscriber.connect().then(() => {
   console.log('📡 Redis subscriber connected');
   subscriber.subscribe('fileProgress', (message) => {
     const data = JSON.parse(message);
-    io.emit('file-progress', data); // emit to all connected clients
+    io.emit('file-progress', data); // Broadcast progress to clients
   });
 }).catch(console.error);
 

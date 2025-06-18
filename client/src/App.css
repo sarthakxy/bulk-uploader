@@ -1,73 +1,218 @@
 /* client/src/App.css */
-.App {
-  font-family: Arial, sans-serif;
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(to right, #f8f9fa, #e9ecef);
+}
+
+.app-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.card {
+  background-color: #ffffff;
+  padding: 40px 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   text-align: center;
-  margin-top: 50px;
+  width: 90%;
+  max-width: 500px;
+}
+
+h1 {
+  margin-bottom: 30px;
+  font-size: 28px;
+  color: #333;
+}
+
+.custom-file-upload {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #6c63ff;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 15px;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.custom-file-upload:hover {
+  background-color: #574fd6;
 }
 
 input[type="file"] {
-  margin-top: 20px;
+  display: none;
 }
 
-button {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background-color: #007bfc;
+.file-info {
+  margin: 10px 0;
+  font-size: 15px;
+  color: #444;
+}
+
+.upload-button {
+  padding: 12px 24px;
+  background-color: #00c9a7;
   color: white;
   border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #005ecb;
-}
-
-.progress-bar {
-  width: 300px;
-  height: 25px;
-  background-color: #eee;
-  margin: 20px auto;
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.progress {
-  height: 100%;
-  background-color: #4caf50;
-  color: white;
-  line-height: 25px;
-  font-weight: bold;
-}
-
-.message {
-  margin-top: 20px;
-  font-size: 16px;
-}
-
-.progress-bar {
-  width: 80%;
-  height: 25px;
-  background: #eee;
-  margin: 10px auto;
   border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+  margin-top: 10px;
+}
+
+.upload-button:hover {
+  background-color: #00b195;
+}
+
+.progress-bar {
+  margin-top: 25px;
+  width: 100%;
+  height: 25px;
+  background-color: #e0e0e0;
+  border-radius: 8px;
   overflow: hidden;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
 }
 
 .progress {
   height: 100%;
-  background: linear-gradient(to right, #4caf50, #81c784);
+  background: linear-gradient(to right, #00b894, #00cec9);
   color: white;
   text-align: center;
   line-height: 25px;
-  transition: width 0.3s ease;
   font-weight: bold;
+  transition: width 0.4s ease;
 }
 
 .message {
   margin-top: 20px;
-  font-size: 1.1em;
+  font-size: 16px;
   color: #333;
 }
+/* Popup Modal */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
 
+.popup {
+  background-color: #fff;
+  padding: 30px 40px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 400px;
+  animation: fadeIn 0.3s ease;
+}
+
+.popup h2 {
+  margin-bottom: 15px;
+  color: #28a745;
+}
+
+.popup p {
+  margin-bottom: 25px;
+  color: #444;
+  font-size: 16px;
+}
+
+.upload-another-btn {
+  background-color: #6c63ff;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.upload-another-btn:hover {
+  background-color: #574fd6;
+}
+
+@keyframes fadeIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.abort-button {
+  background-color: #e53935;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 15px;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.abort-button:hover {
+  background-color: #c62828;
+}
+.popup.warning {
+  background-color: #fff7e6;       /* Brighter warm yellow */
+  color: #b34700;                 /* Darker orange for strong warning */
+  border: 2px solid #ffa500;     /* Vivid orange border */
+  border-radius: 12px;
+  padding: 2rem;
+  width: 400px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.popup.warning h2 {
+  color: #e67e22;                /* Orange headline */
+  font-size: 1.6rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.popup.warning p {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.popup.warning button {
+  background-color: #6c5ce7;     /* Matching purple */
+  color: white;
+  font-weight: 600;
+  border: none;
+  padding: 0.7rem 1.4rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.popup.warning button:hover {
+  background-color: #5b4dcf;
+}

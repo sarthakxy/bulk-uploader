@@ -5,6 +5,11 @@ const xlsx = require('xlsx');
 const { createClient } = require('redis');
 const Record = require('./Record');
 const mongoose = require('mongoose');
+const abortSub = createClient({ url: 'redis://127.0.0.1:6379' });
+const abortedJobs = new Set();
+
+
+
 require('dotenv').config(); // Load .env to access MONGO_URI
 
 mongoose.connect(process.env.MONGO_URI, {
@@ -31,13 +36,23 @@ async function processFile(job) {
   const sheetName = workbook.SheetNames[0];
   const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-  console.log(`📂 Uploading ${job.filename} with ${data.length} records...`);
+  console.log(`📂 Processing ${job.filename} with ${data.length} records...`);
 
   const batchSize = 1000;
   let successCount = 0;
   let failedCount = 0;
 
   for (let i = 0; i < data.length; i += batchSize) {
+     if (abortedJobs.has(job.filename)) {
+    console.log(`⛔ Processing aborted for ${job.filename}`);
+
+    await pub.publish('fileProgress', JSON.stringify({
+      filename: job.filename,
+      aborted: true
+    }));
+
+    return; // Stop further processing
+  }
     const batch = data.slice(i, i + batchSize);
 
     for (const row of batch) {
@@ -91,7 +106,7 @@ async function processFile(job) {
     }
   }));
 
-  console.log(`🎉 Completed uploading of ${job.filename}`);
+  console.log(`🎉 Completed Processing of ${job.filename}`);
 }
 
 async function startWorker() {
