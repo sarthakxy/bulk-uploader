@@ -3,7 +3,7 @@ import axios from 'axios';
 import io from 'socket.io-client';
 import './App.css';
 
-const BACKEND_URL = 'http://34.170.169.80:5000';
+const BACKEND_URL = 'http://localhost:5000';
 const socket = io(BACKEND_URL);
 
 function App() {
