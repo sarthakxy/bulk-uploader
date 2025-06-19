@@ -1,15 +1,17 @@
 const express = require('express');
-const redis = require('../redis'); 
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-
 const router = express.Router();
 
+// ✅ Use fetch via dynamic import
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
+// Ensure uploads directory exists
 const uploadPath = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath);
 
+// Configure multer for disk storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadPath),
   filename: (req, file, cb) => {
@@ -31,9 +33,20 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     uploadedAt: new Date().toISOString()
   };
 
+  console.log('✅ Job data to enqueue:', jobData);
+
   try {
-    
-    await redis.lpush('fileQueue', JSON.stringify(jobData));
+    // ✅ Push job data as a simple stringified object (not array)
+    await fetch(`${process.env.UPSTASH_REDIS_REST_URL}/lpush/fileQueue`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        value: JSON.stringify(jobData) // ✅ Correct format
+      })
+    });
 
     res.status(200).json({
       message: 'File uploaded successfully and queued for processing',
@@ -41,7 +54,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       originalName: req.file.originalname
     });
   } catch (err) {
-    console.error('❌ Error pushing to Redis queue:', err);
+    console.error('❌ Error pushing to Redis queue via REST:', err);
     res.status(500).json({ error: 'Failed to queue file for processing' });
   }
 });

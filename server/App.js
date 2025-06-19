@@ -3,19 +3,18 @@ const http = require('http');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const socketIO = require('socket.io');
-const { createClient } = require('redis');
 const uploadRoutes = require('./routes/upload');
 
 dotenv.config();
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
-  }
+  },
 });
-
 
 app.use(cors());
 app.use(express.json());
@@ -23,41 +22,44 @@ app.use('/uploads', express.static('uploads'));
 app.set('io', io);
 app.use('/api', uploadRoutes);
 
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+const fileIdMap = new Map(); // Maps fileId -> lastProgress
 
-const redisClient = createClient({ url: 'redis://127.0.0.1:6379' });
-redisClient.connect().then(() => {
-  console.log('📡 Redis publisher connected');
-}).catch(console.error);
-
-
-app.post('/api/abort', async (req, res) => {
-  const { filename } = req.body;
-
-  if (!filename) {
-    return res.status(400).json({ error: 'Filename is required' });
-  }
-
-  try {
-    await redisClient.publish('abortJob', filename);
-    console.log(`❌ Abort triggered for ${filename}`);
-    return res.status(200).json({ message: `Abort signal sent for ${filename}` });
-  } catch (err) {
-    console.error('Abort publish error:', err);
-    return res.status(500).json({ error: 'Failed to publish abort signal' });
-  }
+// Endpoint to register fileId to track
+app.post('/api/track/:fileId', (req, res) => {
+  const { fileId } = req.params;
+  fileIdMap.set(fileId, null);
+  res.sendStatus(200);
 });
 
+// Dynamic import of node-fetch and start polling
+(async () => {
+  const fetch = (await import('node-fetch')).default;
 
-const subscriber = createClient({ url: 'redis://127.0.0.1:6379' });
+  setInterval(async () => {
+    for (const [fileId, lastProgress] of fileIdMap) {
+      try {
+        const response = await fetch(`${redisUrl}/get/fileProgress:${fileId}`, {
+          headers: {
+            Authorization: `Bearer ${redisToken}`,
+          },
+        });
 
-subscriber.connect().then(() => {
-  console.log('📡 Redis subscriber connected');
-  subscriber.subscribe('fileProgress', (message) => {
-    const data = JSON.parse(message);
-    io.emit('file-progress', data); 
-  });
-}).catch(console.error);
-
+        const result = await response.json();
+        if (result.result) {
+          const progress = JSON.parse(result.result);
+          if (progress !== lastProgress) {
+            io.emit('file-progress', progress);
+            fileIdMap.set(fileId, progress);
+          }
+        }
+      } catch (err) {
+        console.error(`❌ Polling error for file ${fileId}:`, err);
+      }
+    }
+  }, 2000);
+})();
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

@@ -13,10 +13,17 @@ function App() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showWarningPopup, setShowWarningPopup] = useState(false); 
+  const [showWarningPopup, setShowWarningPopup] = useState(false);
 
   useEffect(() => {
+    console.log('📡 Socket.IO connected');
+
     socket.on('file-progress', (data) => {
+      console.log('📥 Progress received:', data);
+
+      // Only handle events for the file we uploaded
+      if (data.filename !== uploadedFileName) return;
+
       if (data.completed) {
         setProcessingProgress(100);
         setMessage(`✅ File processed: ${data.filename}`);
@@ -32,19 +39,19 @@ function App() {
     return () => {
       socket.off('file-progress');
     };
-  }, []);
+  }, [uploadedFileName]); // depends on uploaded filename
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
 
     if (selectedFile.name === uploadedFileName) {
-      setShowWarningPopup(true); 
+      setShowWarningPopup(true);
       return;
     }
 
     setFile(selectedFile);
-    setUploadedFileName(selectedFile.name);
+    setUploadedFileName('');
     setMessage('');
     setProcessingProgress(0);
     setIsProcessing(false);
@@ -60,9 +67,15 @@ function App() {
     formData.append('file', file);
 
     try {
-      await axios.post(`${BACKEND_URL}/api/upload`, formData, {
+      const response = await axios.post(`${BACKEND_URL}/api/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+
+      const savedFilename = response.data.filename;
+      setUploadedFileName(savedFilename); // track backend unique filename
+
+      // Tell backend to track this file for polling using backend filename
+      await fetch(`${BACKEND_URL}/api/track/${savedFilename}`, { method: 'POST' });
 
       setMessage('📤 File Uploaded. Waiting for backend processing to complete...');
       setIsProcessing(true);
@@ -78,6 +91,7 @@ function App() {
     setMessage('');
     setShowSuccessPopup(false);
     setIsProcessing(false);
+    setUploadedFileName('');
   };
 
   return (
@@ -89,13 +103,12 @@ function App() {
           Choose File
         </label>
         <input
-  id="fileUpload"
-  type="file"
-  onClick={(e) => (e.target.value = null)} 
-  onChange={handleFileChange}
-  accept=".csv,.xlsx"
-/>
-
+          id="fileUpload"
+          type="file"
+          onClick={(e) => (e.target.value = null)}
+          onChange={handleFileChange}
+          accept=".csv,.xlsx"
+        />
 
         {file && (
           <p className="file-info">
@@ -122,7 +135,6 @@ function App() {
         {message && <p className="message">{message}</p>}
       </div>
 
-      
       {showSuccessPopup && (
         <div className="popup-overlay">
           <div className="popup">
@@ -135,7 +147,6 @@ function App() {
         </div>
       )}
 
-      
       {showWarningPopup && (
         <div className="popup-overlay">
           <div className="popup warning">
